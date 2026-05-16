@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quản Lý Tài Sản Công Ty</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+/* ===== CSS CUSTOM PROPERTIES ===== */
+:root {
+  --bg: #f0f2f5;
+  --surface: #ffffff;
+  --surface-hover: #f8f9fa;
+  --text: #212529;
+  --text-secondary: #6c757d;
+  --border: #dee2e6;
+  --primary: #4361ee;
+  --primary-hover: #3a56d4;
+  --primary-light: #eef0fd;
+  --success: #2ecc71;
+  --success-light: #e8f8ef;
+  --danger: #e74c3c;
+  --danger-light: #fdecea;
+  --warning: #f39c12;
+  --warning-light: #fef5e7;
+  --sidebar-bg: #1a1d29;
+  --sidebar-text: #b0b8cc;
+  --sidebar-active: #4361ee;
+  --sidebar-hover: #252836;
+  --shadow: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.12);
+  --radius: 8px;
+  --radius-sm: 4px;
+  --transition: 0.2s ease;
+  --sidebar-width: 250px;
+  --navbar-height: 56px;
+}
+[data-theme="dark"] {
+  --bg: #1a1d29;
+  --surface: #252836;
+  --surface-hover: #2d3142;
+  --text: #e0e3eb;
+  --text-secondary: #8b8fa8;
+  --border: #3d4156;
+  --primary: #5c7cfa;
+  --primary-hover: #4a6ae8;
+  --primary-light: #2d3150;
+  --success: #3dd68c;
+  --success-light: #1a3a2c;
+  --danger: #f87171;
+  --danger-light: #3a1a1a;
+  --warning: #fbbf24;
+  --warning-light: #3a2e1a;
+  --shadow: 0 2px 8px rgba(0,0,0,0.3);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.4);
+}
+
+/* ===== RESET & BASE ===== */
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:var(--bg); color:var(--text); min-height:100vh; transition: background var(--transition), color var(--transition); }
+a { color:var(--primary); text-decoration:none; }
+button { cursor:pointer; font-family:inherit; border:none; outline:none; }
+input, select, textarea { font-family:inherit; outline:none; }
+
+/* ===== LAYOUT ===== */
+.app-container { display:flex; min-height:100vh; }
+.sidebar { width:var(--sidebar-width); background:var(--sidebar-bg); color:var(--sidebar-text); position:fixed; top:0; left:0; bottom:0; z-index:100; transition:transform var(--transition); display:flex; flex-direction:column; }
+.sidebar-logo { padding:20px; font-size:1.2rem; font-weight:700; color:#fff; border-bottom:1px solid rgba(255,255,255,0.08); display:flex; align-items:center; gap:10px; }
+.sidebar-logo i { color:var(--sidebar-active); }
+.sidebar-nav { flex:1; overflow-y:auto; padding:12px 0; }
+.sidebar-nav a { display:flex; align-items:center; gap:10px; padding:12px 20px; color:var(--sidebar-text); text-decoration:none; transition:all var(--transition); font-size:0.92rem; border-left:3px solid transparent; }
+.sidebar-nav a:hover, .sidebar-nav a.active { background:var(--sidebar-hover); color:#fff; border-left-color:var(--sidebar-active); }
+.sidebar-nav a .badge { margin-left:auto; background:var(--danger); color:#fff; font-size:0.7rem; padding:2px 6px; border-radius:10px; min-width:20px; text-align:center; }
+.main-wrapper { margin-left:var(--sidebar-width); flex:1; display:flex; flex-direction:column; min-height:100vh; transition:margin var(--transition); }
+.header { height:var(--navbar-height); background:var(--surface); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; gap:16px; position:sticky; top:0; z-index:50; box-shadow:var(--shadow); }
+.header-search { flex:1; max-width:400px; }
+.header-search input { width:100%; padding:8px 14px; border:1px solid var(--border); border-radius:20px; background:var(--bg); color:var(--text); font-size:0.88rem; }
+.header-actions { display:flex; align-items:center; gap:12px; margin-left:auto; }
+.header-actions .user-info { font-size:0.88rem; color:var(--text-secondary); }
+.theme-toggle { background:none; border:none; color:var(--text-secondary); font-size:1.2rem; cursor:pointer; padding:6px 8px; border-radius:var(--radius-sm); transition:all var(--transition); }
+.theme-toggle:hover { color:var(--text); background:var(--bg); }
+.main-content { flex:1; padding:24px; overflow-y:auto; }
+.hamburger { display:none; background:none; border:none; color:var(--text); font-size:1.4rem; cursor:pointer; padding:4px 8px; }
+
+/* ===== EMPLOYEE LAYOUT ===== */
+.employee-layout .sidebar { display:none; }
+.employee-layout .main-wrapper { margin-left:0; }
+.emp-navbar { height:var(--navbar-height); background:var(--surface); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; gap:20px; box-shadow:var(--shadow); }
+.emp-navbar .logo { font-weight:700; font-size:1.1rem; color:var(--primary); }
+.emp-navbar nav { display:flex; gap:4px; flex:1; }
+.emp-navbar nav a { padding:8px 16px; border-radius:var(--radius-sm); color:var(--text-secondary); text-decoration:none; font-size:0.9rem; transition:all var(--transition); }
+.emp-navbar nav a:hover, .emp-navbar nav a.active { color:var(--primary); background:var(--primary-light); }
+.emp-navbar .emp-actions { display:flex; align-items:center; gap:12px; }
+
+/* ===== LOGIN ===== */
+.login-overlay { position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:9999; }
+.login-card { background:var(--surface); border-radius:12px; padding:40px; width:400px; max-width:90vw; box-shadow:var(--shadow-lg); }
+.login-card h2 { text-align:center; margin-bottom:8px; color:var(--primary); }
+.login-card .subtitle { text-align:center; color:var(--text-secondary); font-size:0.9rem; margin-bottom:28px; }
+.login-card .form-group { margin-bottom:16px; }
+.login-card label { display:block; margin-bottom:6px; font-weight:500; font-size:0.9rem; color:var(--text); }
+.login-card input { width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:0.95rem; background:var(--bg); color:var(--text); }
+.login-card input:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(67,97,238,0.15); }
+.login-card button { width:100%; padding:11px; background:var(--primary); color:#fff; border-radius:var(--radius-sm); font-size:0.95rem; font-weight:600; margin-top:8px; transition:background var(--transition); }
+.login-card button:hover { background:var(--primary-hover); }
+.login-card .login-tabs { display:flex; margin-bottom:20px; border-bottom:2px solid var(--border); }
+.login-card .login-tab { flex:1; text-align:center; padding:10px; cursor:pointer; font-weight:500; font-size:0.9rem; color:var(--text-secondary); border-bottom:2px solid transparent; margin-bottom:-2px; transition:all var(--transition); }
+.login-card .login-tab.active { color:var(--primary); border-bottom-color:var(--primary); }
+.login-error { color:var(--danger); font-size:0.84rem; text-align:center; margin-top:8px; display:none; }
+
+/* ===== CARDS & SURFACES ===== */
+.page-header { margin-bottom:24px; }
+.page-header h1 { font-size:1.4rem; margin-bottom:4px; }
+.page-header p { color:var(--text-secondary); font-size:0.88rem; }
+.card { background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow); padding:20px; margin-bottom:20px; }
+.card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px; }
+.card-header h3 { font-size:1rem; }
+.stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin-bottom:24px; }
+.stat-card { background:var(--surface); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); display:flex; align-items:center; gap:16px; }
+.stat-card .stat-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.3rem; }
+.stat-card .stat-value { font-size:1.6rem; font-weight:700; }
+.stat-card .stat-label { color:var(--text-secondary); font-size:0.82rem; }
+.charts-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:24px; }
+.charts-grid .chart-box { background:var(--surface); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); }
+.charts-grid .chart-box h3 { font-size:0.95rem; margin-bottom:12px; }
+.chart-box canvas { max-height:280px; }
+
+/* ===== FORMS ===== */
+.form-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; }
+.form-group { margin-bottom:14px; }
+.form-group label { display:block; margin-bottom:5px; font-weight:500; font-size:0.88rem; color:var(--text); }
+.form-group input, .form-group select, .form-group textarea { width:100%; padding:9px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:0.9rem; background:var(--bg); color:var(--text); transition:border var(--transition); }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(67,97,238,0.12); }
+.form-group textarea { resize:vertical; min-height:70px; }
+.form-group .hint { font-size:0.78rem; color:var(--text-secondary); margin-top:4px; }
+.form-actions { display:flex; gap:10px; margin-top:10px; }
+
+/* ===== BUTTONS ===== */
+.btn { padding:8px 16px; border-radius:var(--radius-sm); font-size:0.88rem; font-weight:500; transition:all var(--transition); display:inline-flex; align-items:center; gap:6px; }
+.btn-primary { background:var(--primary); color:#fff; }
+.btn-primary:hover { background:var(--primary-hover); }
+.btn-success { background:var(--success); color:#fff; }
+.btn-success:hover { opacity:0.9; }
+.btn-danger { background:var(--danger); color:#fff; }
+.btn-danger:hover { opacity:0.9; }
+.btn-warning { background:var(--warning); color:#fff; }
+.btn-outline { background:transparent; border:1px solid var(--border); color:var(--text); }
+.btn-outline:hover { background:var(--bg); }
+.btn-sm { padding:5px 10px; font-size:0.8rem; }
+.btn-icon { width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center; border-radius:var(--radius-sm); background:transparent; color:var(--text-secondary); }
+.btn-icon:hover { background:var(--bg); color:var(--text); }
+.btn-group { display:flex; gap:6px; flex-wrap:wrap; }
+
+/* ===== TABLES ===== */
+.table-container { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; font-size:0.88rem; }
+th, td { padding:10px 12px; text-align:left; border-bottom:1px solid var(--border); }
+th { font-weight:600; color:var(--text-secondary); font-size:0.8rem; text-transform:uppercase; letter-spacing:0.5px; background:var(--bg); cursor:pointer; user-select:none; white-space:nowrap; }
+th:hover { color:var(--primary); }
+tr:hover { background:var(--surface-hover); }
+.table-filter-row { display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap; align-items:center; }
+.table-filter-row select, .table-filter-row input { padding:7px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:0.85rem; background:var(--surface); color:var(--text); }
+
+/* ===== BADGES & STATUS ===== */
+.badge { display:inline-block; padding:3px 10px; border-radius:12px; font-size:0.76rem; font-weight:500; }
+.badge-success { background:var(--success-light); color:var(--success); }
+.badge-danger { background:var(--danger-light); color:var(--danger); }
+.badge-warning { background:var(--warning-light); color:var(--warning); }
+.badge-primary { background:var(--primary-light); color:var(--primary); }
+.badge-secondary { background:var(--bg); color:var(--text-secondary); }
+.status-active { color:var(--success); }
+.status-resigned { color:var(--danger); }
+
+/* ===== TABS ===== */
+.tabs { display:flex; gap:2px; border-bottom:2px solid var(--border); margin-bottom:16px; flex-wrap:wrap; }
+.tab { padding:8px 16px; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; font-size:0.88rem; font-weight:500; color:var(--text-secondary); transition:all var(--transition); }
+.tab:hover { color:var(--text); }
+.tab.active { color:var(--primary); border-bottom-color:var(--primary); }
+
+/* ===== MODAL ===== */
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; display:flex; align-items:center; justify-content:center; animation:fadeIn 0.15s ease; }
+.modal { background:var(--surface); border-radius:12px; padding:24px; width:500px; max-width:92vw; max-height:85vh; overflow-y:auto; box-shadow:var(--shadow-lg); }
+.modal h3 { margin-bottom:16px; }
+.modal-actions { display:flex; gap:10px; margin-top:20px; justify-content:flex-end; }
+
+/* ===== TOAST ===== */
+.toast-container { position:fixed; top:20px; right:20px; z-index:300; display:flex; flex-direction:column; gap:8px; }
+.toast { padding:12px 20px; border-radius:8px; color:#fff; font-size:0.88rem; box-shadow:var(--shadow-lg); animation:slideIn 0.3s ease; display:flex; align-items:center; gap:8px; max-width:380px; }
+.toast-success { background:var(--success); }
+.toast-error { background:var(--danger); }
+.toast-warning { background:var(--warning); }
+.toast .toast-close { margin-left:auto; cursor:pointer; opacity:0.8; background:none; border:none; color:#fff; font-size:1rem; }
+
+/* ===== PAGINATION ===== */
+.pagination { display:flex; gap:4px; justify-content:center; margin-top:16px; flex-wrap:wrap; }
+.pagination button { padding:6px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface); color:var(--text); font-size:0.84rem; }
+.pagination button.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+.pagination button:disabled { opacity:0.4; cursor:not-allowed; }
+.pagination button:hover:not(:disabled):not(.active) { background:var(--bg); }
+
+/* ===== EMPTY STATE ===== */
+.empty-state { text-align:center; padding:40px 20px; color:var(--text-secondary); }
+.empty-state i { font-size:3rem; margin-bottom:12px; display:block; opacity:0.5; }
+
+/* ===== LOADING ===== */
+.loading-spinner { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.3); z-index:250; align-items:center; justify-content:center; }
+.loading-spinner.show { display:flex; }
+.spinner { width:44px; height:44px; border:4px solid var(--border); border-top-color:var(--primary); border-radius:50%; animation:spin 0.8s linear infinite; }
+
+/* ===== PRINT ===== */
+@media print {
+  .sidebar, .header, .emp-navbar, .btn, .form-actions, .table-filter-row, .tabs, .pagination, .toast-container, .theme-toggle, .hamburger, .modal-overlay { display:none !important; }
+  .main-wrapper { margin-left:0 !important; }
+  .main-content { padding:0 !important; }
+  .card { box-shadow:none; border:1px solid #ccc; break-inside:avoid; }
+  .print-label { text-align:center; padding:20px; }
+  .print-label .asset-code { font-size:2rem; font-weight:bold; }
+  body { background:#fff; color:#000; }
+}
+
+/* ===== WARNING HIGHLIGHT ===== */
+.warning-highlight { background:var(--warning-light) !important; border-left:3px solid var(--warning); }
+.warning-highlight td:first-child { padding-left:9px; }
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+@keyframes slideIn { from { transform:translateX(100%); opacity:0; } to { transform:translateX(0); opacity:1; } }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width:1024px) {
+  .sidebar { width:64px; }
+  .sidebar-logo span, .sidebar-nav a span, .sidebar-nav a .badge { display:none; }
+  .sidebar-nav a { justify-content:center; padding:12px; }
+  .main-wrapper { margin-left:64px; }
+  .charts-grid { grid-template-columns:1fr; }
+}
+@media (max-width:768px) {
+  .sidebar { transform:translateX(-100%); }
+  .sidebar.open { transform:translateX(0); width:var(--sidebar-width); }
+  .sidebar.open .sidebar-logo span, .sidebar.open .sidebar-nav a span, .sidebar.open .sidebar-nav a .badge { display:inline; }
+  .sidebar.open .sidebar-nav a { justify-content:flex-start; padding:12px 20px; }
+  .main-wrapper { margin-left:0; }
+  .hamburger { display:block; }
+  .stats-grid { grid-template-columns:1fr 1fr; }
+  .form-grid { grid-template-columns:1fr; }
+  .header-search { display:none; }
+}
+@media (max-width:480px) {
+  .stats-grid { grid-template-columns:1fr; }
+  .header { padding:0 12px; }
+  .main-content { padding:16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== TOAST CONTAINER ===== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ===== LOADING SPINNER ===== -->
+<div class="loading-spinner" id="loadingSpinner"><div class="spinner"></div></div>
+
+<!-- ===== LOGIN OVERLAY ===== -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-card">
+    <h2><i class="fas fa-boxes"></i> QLTS</h2>
+    <p class="subtitle">Quản Lý Tài Sản Công Ty</p>
+    <div class="login-tabs">
+      <div class="login-tab active" data-role="employee" id="tabEmployee">Nhân viên</div>
+      <div class="login-tab" data-role="admin" id="tabAdmin">Admin</div>
+    </div>
+    <div id="loginFormEmployee">
+      <div class="form-group"><label>Mã nhân viên (4 chữ số)</label><input type="text" id="empCode" placeholder="VD: 1001" maxlength="4"></div>
+      <button onclick="App.Auth.loginEmployee()">Đăng nhập</button>
+    </div>
+    <div id="loginFormAdmin" style="display:none;">
+      <div class="form-group"><label>Mã Admin</label><input type="text" id="adminCode" placeholder="Nhập mã admin"></div>
+      <div class="form-group"><label>Mật khẩu</label><input type="password" id="adminPass" placeholder="Nhập mật khẩu"></div>
+      <button onclick="App.Auth.loginAdmin()">Đăng nhập</button>
+    </div>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<!-- ===== ADMIN LAYOUT ===== -->
+<div class="app-container" id="adminLayout" style="display:none;">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><i class="fas fa-boxes"></i><span>QLTS Admin</span></div>
+    <nav class="sidebar-nav" id="sidebarNav">
+      <a href="#dashboard" data-page="dashboard"><i class="fas fa-chart-bar"></i><span>Dashboard</span></a>
+      <a href="#categories" data-page="categories"><i class="fas fa-folder"></i><span>Danh mục</span></a>
+      <a href="#employees" data-page="employees"><i class="fas fa-users"></i><span>Nhân viên</span></a>
+      <a href="#assets" data-page="assets"><i class="fas fa-box"></i><span>Tài sản</span></a>
+      <a href="#assign" data-page="assign"><i class="fas fa-share"></i><span>Cấp phát</span></a>
+      <a href="#requests" data-page="requests"><i class="fas fa-inbox"></i><span>Yêu cầu</span><span class="badge" id="reqBadge" style="display:none;">0</span></a>
+      <a href="#revoke" data-page="revoke"><i class="fas fa-undo"></i><span>Thu hồi</span></a>
+      <a href="#history" data-page="history"><i class="fas fa-clock"></i><span>Lịch sử</span></a>
+      <a href="#teams" data-page="teams"><i class="fas fa-users-gear"></i><span>Teams</span></a>
+    </nav>
+  </aside>
+  <div class="main-wrapper">
+    <header class="header">
+      <button class="hamburger" onclick="App.UI.toggleSidebar()"><i class="fas fa-bars"></i></button>
+      <div class="header-search"><input type="text" placeholder="Tìm kiếm..." id="headerSearch"></div>
+      <div class="header-actions">
+        <button class="theme-toggle" onclick="App.UI.toggleTheme()" title="Dark/Light mode"><i class="fas fa-moon" id="themeIcon"></i></button>
+        <span class="user-info" id="adminUserInfo"></span>
+        <button class="btn btn-outline btn-sm" onclick="App.Auth.logout()"><i class="fas fa-sign-out-alt"></i> Đăng xuất</button>
+      </div>
+    </header>
+    <main class="main-content" id="adminMain"></main>
+  </div>
+</div>
+
+<!-- ===== EMPLOYEE LAYOUT ===== -->
+<div class="employee-layout" id="employeeLayout" style="display:none;">
+  <nav class="emp-navbar">
+    <span class="logo"><i class="fas fa-boxes"></i> QLTS</span>
+    <nav>
+      <a href="#emp-dashboard" data-page="emp-dashboard"><i class="fas fa-home"></i> Dashboard</a>
+      <a href="#emp-requests" data-page="emp-requests"><i class="fas fa-paper-plane"></i> Yêu cầu</a>
+      <a href="#emp-history" data-page="emp-history"><i class="fas fa-clock"></i> Lịch sử</a>
+    </nav>
+    <div class="emp-actions">
+      <button class="theme-toggle" onclick="App.UI.toggleTheme()"><i class="fas fa-moon" id="themeIconEmp"></i></button>
+      <span class="user-info" id="empUserInfo"></span>
+      <button class="btn btn-outline btn-sm" onclick="App.Auth.logout()">Đăng xuất</button>
+    </div>
+  </nav>
+  <main class="main-content" id="employeeMain"></main>
+</div>
+
+<script>
+/* =================================================================================
+ *  APP: QUẢN LÝ TÀI SẢN CÔNG TY
+ *  Single-file HTML/CSS/JS — Module Pattern
+ * ================================================================================= */
+const App = (() => {
+  'use strict';
+
+  /* ===== CONSTANTS ===== */
+  const API_BASE = '/api';
+  const BANNED_PREFIXES = ['ADM','SYS','TMP','DEL','ALL','NEW','OLD','TEST'];
+  const DEFAULT_TEAMS = ['York','Kiri','Creek','Como','Bud','BO','Scope'];
+  const ACTIONS = ['assign','revoke','auto_revoke','revoke_all','create_asset','update_asset','approve_request','reject_request','fulfill_request'];
+  const PER_PAGE = 10;
+
+  /* ===== API CLIENT ===== */
+  const API = {
+    async get(path, params) {
+      const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+      const res = await fetch(API_BASE + path + qs);
+      if (!res.ok) { const err = await res.json().catch(()=>({})); throw new Error(err.error || 'API Error'); }
+      return res.json();
+    },
+    async post(path, body) {
+      const res = await fetch(API_BASE + path, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+      if (!res.ok) { const err = await res.json().catch(()=>({})); throw new Error(err.error || 'API Error'); }
+      return res.json();
+    },
+    async put(path, body) {
+      const res = await fetch(API_BASE + path, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+      if (!res.ok) { const err = await res.json().catch(()=>({})); throw new Error(err.error || 'API Error'); }
+      return res.json();
+    },
+    async del(path, params) {
+      const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+      const res = await fetch(API_BASE + path + qs, { method:'DELETE' });
+      if (!res.ok) { const err = await res.json().catch(()=>({})); throw new Error(err.error || 'API Error'); }
+      return res.json();
+    }
+  };
+
+  /* ===== STORE (API-backed) ===== */
+  const Store = {
+    async cats() { const r = await API.get('/categories', {limit:1000}); return r.data || []; },
+    async emps() { const r = await API.get('/employees', {limit:1000}); return r.data || []; },
+    async asts() { const r = await API.get('/assets', {limit:1000}); return r.data || []; },
+    async asgs() { const r = await API.get('/assignments', {limit:1000}); return r.data || []; },
+    async reqs() { const r = await API.get('/requests', {limit:1000}); return r.data || []; },
+    async hists() { const r = await API.get('/history', {limit:1000}); return r.data || []; },
+    async tms() { try { const r = await API.get('/teams'); return r.teams || [...DEFAULT_TEAMS]; } catch(e) { return [...DEFAULT_TEAMS]; } },
+    async saveCats(v) { await API.put('/categories', v); },
+    async saveEmps(v) { await API.put('/employees', v); },
+    async saveAsts(v) { await API.put('/assets', v); },
+    async saveAsgs(v) { await API.put('/assignments', v); },
+    async saveReqs(v) { await API.put('/requests', v); },
+    async saveHists(v) { await API.put('/history', v); },
+    async saveTms(v) { await API.put('/teams', {teams:v}); },
+    async nextId(arr, prefix, len) { let max = 0; arr.forEach(x => { const m = parseInt(String(x.id).replace(prefix,'')); if (m > max) max = m; }); return prefix + String(max+1).padStart(len,'0'); }
+  };
+
+  /* ===== STATE ===== */
+  const State = {
+    currentUser: null,
+    currentPage: null,
+    filters: {},
+    sortCol: null,
+    sortDir: 'asc',
+    init() {
+      const theme = localStorage.getItem('asm_theme');
+      if (theme) document.documentElement.setAttribute('data-theme', theme);
+      this.updateThemeIcons();
+    },
+    updateThemeIcons() {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      document.querySelectorAll('#themeIcon, #themeIconEmp').forEach(ic => { ic.className = isDark ? 'fas fa-sun' : 'fas fa-moon'; });
+    }
+  };
+
+  /* ===== UI HELPERS ===== */
+  const UI = {
+    toast(msg, type) {
+      const c = document.getElementById('toastContainer');
+      const t = document.createElement('div');
+      t.className = 'toast toast-'+type;
+      const icons = {success:'fa-check-circle', error:'fa-exclamation-circle', warning:'fa-exclamation-triangle'};
+      t.innerHTML = `<i class="fas ${icons[type]||icons.success}"></i>${msg}<button class="toast-close" onclick="this.parentElement.remove()">&times;</button>`;
+      c.appendChild(t);
+      setTimeout(() => { if (t.parentElement) t.remove(); }, 3000);
+    },
+    confirm(msg) { return new Promise(resolve => { if (confirm(msg)) resolve(true); else resolve(false); }); },
+    showLoading() { document.getElementById('loadingSpinner').classList.add('show'); },
+    hideLoading() { document.getElementById('loadingSpinner').classList.remove('show'); },
+    toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); },
+    toggleTheme() {
+      const el = document.documentElement;
+      const next = el.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      el.setAttribute('data-theme', next);
+      localStorage.setItem('asm_theme', next);
+      State.updateThemeIcons();
+    },
+    emptyState(msg, icon) { return `<div class="empty-state"><i class="fas fa-${icon||'inbox'}"></i><p>${msg||'Không có dữ liệu'}</p></div>`; },
+    badge(text, cls) { return `<span class="badge badge-${cls}">${text}</span>`; },
+    statusBadge(status) {
+      const map = { pending:['warning','Chờ duyệt'], approved:['primary','Đã duyệt'], rejected:['danger','Từ chối'], fulfilled:['success','Đã cấp'], in_stock:['success','Còn hàng'], assigned:['primary','Đã cấp'], broken:['danger','Hỏng'], active:['success','Đang làm'], resigned:['danger','Nghỉ việc'] };
+      const [c,l] = map[status]||['secondary',status];
+      return UI.badge(l,c);
+    },
+    // Client-side paginated table render
+    renderTable(headers, allRows, opts) {
+      opts = opts || {};
+      const page = (State.currentPageFilters && State.currentPageFilters.page) || 1;
+      const total = allRows.length;
+      const totalPages = Math.ceil(total / PER_PAGE) || 1;
+      const start = (page - 1) * PER_PAGE;
+      const rows = allRows.slice(start, start + PER_PAGE);
+      let h = '<div class="table-container"><table><thead><tr>';
+      headers.forEach((hh,i) => {
+        h += `<th data-col="${i}" onclick="App.UI.sortTable(this,${i})">${hh} ${State.sortCol===i ? (State.sortDir==='asc'?'<i class="fas fa-sort-up"></i>':'<i class="fas fa-sort-down"></i>') : '<i class="fas fa-sort" style="opacity:0.3"></i>'}</th>`;
+      });
+      h += '</tr></thead><tbody>';
+      if (!rows || rows.length === 0) {
+        h += `<tr><td colspan="${headers.length}">${UI.emptyState(opts.emptyMsg||'Không có dữ liệu', opts.emptyIcon||'inbox')}</td></tr>`;
+      } else {
+        rows.forEach(row => {
+          h += '<tr>';
+          row.forEach(cell => { h += `<td>${cell !== null && cell !== undefined ? cell : ''}</td>`; });
+          h += '</tr>';
+        });
+      }
+      h += '</tbody></table></div>';
+      if (totalPages > 1 && !opts.noPagination) {
+        h += UI.renderPagination(page, totalPages);
+      }
+      return h;
+    },
+    sortTable(th, col) {
+      if (State.sortCol === col) { State.sortDir = State.sortDir === 'asc' ? 'desc' : 'asc'; }
+      else { State.sortCol = col; State.sortDir = 'asc'; }
+      if (Router.routes[State.currentPage]) Router.routes[State.currentPage]();
+    },
+    renderPagination(current, total) {
+      let h = '<div class="pagination">';
+      h += `<button ${current===1?'disabled':''} onclick="App.UI.goToPage(${current-1})"><i class="fas fa-chevron-left"></i></button>`;
+      const start = Math.max(1, current-2);
+      const end = Math.min(total, current+2);
+      if (start > 1) h += `<button onclick="App.UI.goToPage(1)">1</button>${start>2?'<button disabled>...</button>':''}`;
+      for (let i=start; i<=end; i++) h += `<button class="${i===current?'active':''}" onclick="App.UI.goToPage(${i})">${i}</button>`;
+      if (end < total) h += `${end<total-1?'<button disabled>...</button>':''}<button onclick="App.UI.goToPage(${total})">${total}</button>`;
+      h += `<button ${current===total?'disabled':''} onclick="App.UI.goToPage(${current+1})"><i class="fas fa-chevron-right"></i></button>`;
+      h += '</div>';
+      return h;
+    },
+    goToPage(p) {
+      State.currentPageFilters = State.currentPageFilters || {};
+      State.currentPageFilters.page = p;
+      if (Router.routes[State.currentPage]) Router.routes[State.currentPage]();
+    },
+    show(elId) { const e = document.getElementById(elId); if (e) e.style.display = ''; },
+    hide(elId) { const e = document.getElementById(elId); if (e) e.style.display = 'none'; },
+    escapeHtml(str) { if (!str) return ''; return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); },
+    escapeJs(str) { if (!str) return ''; return str.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"').replace(/\n/g,'\\n'); },
+    modal(innerHTML) {
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      overlay.innerHTML = `<div class="modal">${innerHTML}</div>`;
+      document.body.appendChild(overlay);
+      overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+      return overlay;
+    }
+  };
+
+  /* ===== AUTH ===== */
+  const Auth = {
+    async loginEmployee() {
+      const code = document.getElementById('empCode').value.trim();
+      if (!/^\d{4}$/.test(code)) { this.showError('Mã nhân viên phải là 4 chữ số'); return; }
+      try {
+        const data = await API.post('/auth', { role:'employee', userId:code });
+        this.setSession(data);
+        this.enterApp('employee');
+      } catch(e) { this.showError(e.message); }
+    },
+    async loginAdmin() {
+      const code = document.getElementById('adminCode').value.trim();
+      const pass = document.getElementById('adminPass').value.trim();
+      try {
+        const data = await API.post('/auth', { role:'admin', userId:code, password:pass });
+        this.setSession(data);
+        this.enterApp('admin');
+      } catch(e) { this.showError(e.message); }
+    },
+    showError(msg) { const e = document.getElementById('loginError'); e.textContent = msg; e.style.display = 'block'; },
+    setSession(data) { sessionStorage.setItem('asm_session', JSON.stringify(data)); },
+    getSession() { try { return JSON.parse(sessionStorage.getItem('asm_session')); } catch(e) { return null; } },
+    logout() {
+      sessionStorage.removeItem('asm_session');
+      State.currentUser = null;
+      State.currentPage = null;
+      UI.hide('adminLayout'); UI.hide('employeeLayout'); UI.show('loginOverlay');
+      ['empCode','adminCode','adminPass'].forEach(id => { document.getElementById(id).value = ''; });
+      document.getElementById('loginError').style.display = 'none';
+    },
+    enterApp(role) {
+      UI.hide('loginOverlay');
+      State.currentUser = this.getSession();
+      if (role === 'admin') {
+        UI.show('adminLayout'); UI.hide('employeeLayout');
+        document.getElementById('adminUserInfo').textContent = 'Admin';
+        Router.navigate('dashboard');
+      } else {
+        UI.show('employeeLayout'); UI.hide('adminLayout');
+        document.getElementById('empUserInfo').textContent = State.currentUser.name || State.currentUser.userId;
+        Router.navigate('emp-dashboard');
+      }
+    },
+    checkAuth() {
+      const sess = this.getSession();
+      if (sess) { State.currentUser = sess; this.enterApp(sess.role); return true; }
+      return false;
+    }
+  };
+
+  /* ===== ROUTER ===== */
+  const Router = {
+    routes: {},
+    _navigating: false,
+    init() {
+      window.addEventListener('hashchange', () => { if (!this._navigating) this.handleHash(); });
+      if (!Auth.checkAuth()) {
+        UI.show('loginOverlay');
+      }
+      // Login tab switching
+      document.getElementById('tabEmployee').addEventListener('click', function() {
+        this.classList.add('active');
+        document.getElementById('tabAdmin').classList.remove('active');
+        UI.show('loginFormEmployee');
+        UI.hide('loginFormAdmin');
+        document.getElementById('loginError').style.display = 'none';
+      });
+      document.getElementById('tabAdmin').addEventListener('click', function() {
+        this.classList.add('active');
+        document.getElementById('tabEmployee').classList.remove('active');
+        UI.hide('loginFormEmployee');
+        UI.show('loginFormAdmin');
+        document.getElementById('loginError').style.display = 'none';
+      });
+      // Enter key on login
+      document.getElementById('empCode').addEventListener('keydown', e => { if (e.key==='Enter') Auth.loginEmployee(); });
+      document.getElementById('adminPass').addEventListener('keydown', e => { if (e.key==='Enter') Auth.loginAdmin(); });
+      // Sidebar nav clicks
+      document.getElementById('sidebarNav').addEventListener('click', e => {
+        const a = e.target.closest('a[data-page]');
+        if (a) { e.preventDefault(); Router.navigate(a.dataset.page); }
+      });
+      // Employee nav clicks
+      document.querySelector('.emp-navbar nav').addEventListener('click', e => {
+        const a = e.target.closest('a[data-page]');
+        if (a) { e.preventDefault(); Router.navigate(a.dataset.page); }
+      });
+    },
+    register(page, fn) { this.routes[page] = fn; },
+    navigate(page) {
+      State.currentPage = page;
+      State.sortCol = null; State.sortDir = 'asc';
+      State.currentPageFilters = {page:1};
+      this._navigating = true;
+      window.location.hash = page;
+      this._navigating = false;
+      // Update sidebar active
+      document.querySelectorAll('#sidebarNav a').forEach(a => a.classList.remove('active'));
+      const activeLink = document.querySelector(`#sidebarNav a[data-page="${page}"]`);
+      if (activeLink) activeLink.classList.add('active');
+      // Update employee nav active
+      document.querySelectorAll('.emp-navbar nav a').forEach(a => a.classList.remove('active'));
+      const empLink = document.querySelector(`.emp-navbar nav a[data-page="${page}"]`);
+      if (empLink) empLink.classList.add('active');
+      // Close mobile sidebar
+      document.getElementById('sidebar').classList.remove('open');
+      // Render
+      if (this.routes[page]) this.routes[page]();
+      // Update request badge
+      if (State.currentUser && State.currentUser.role === 'admin') {
+        const pending = Store.reqs().filter(r => r.status === 'pending').length;
+        const badge = document.getElementById('reqBadge');
+        if (pending > 0) { badge.textContent = pending; badge.style.display = ''; }
+        else { badge.style.display = 'none'; }
+      }
+    },
+    handleHash() {
+      const page = window.location.hash.replace('#','') || (State.currentUser && State.currentUser.role === 'admin' ? 'dashboard' : 'emp-dashboard');
+      if (this.routes[page]) {
+        State.currentPage = page;
+        State.sortCol = null; State.sortDir = 'asc';
+        State.currentPageFilters = {page:1};
+        document.querySelectorAll('#sidebarNav a').forEach(a => a.classList.remove('active'));
+        const activeLink = document.querySelector(`#sidebarNav a[data-page="${page}"]`);
+        if (activeLink) activeLink.classList.add('active');
+        document.querySelectorAll('.emp-navbar nav a').forEach(a => a.classList.remove('active'));
+        const empLink = document.querySelector(`.emp-navbar nav a[data-page="${page}"]`);
+        if (empLink) empLink.classList.add('active');
+        document.getElementById('sidebar').classList.remove('open');
+        this.routes[page]();
+        if (State.currentUser && State.currentUser.role === 'admin') {
+          const pending = Store.reqs().filter(r => r.status === 'pending').length;
+          const badge = document.getElementById('reqBadge');
+          if (pending > 0) { badge.textContent = pending; badge.style.display = ''; }
+          else { badge.style.display = 'none'; }
+        }
+      }
+    },
+    renderPage(title, subtitle, content) {
+      const mainId = State.currentUser && State.currentUser.role === 'admin' ? 'adminMain' : 'employeeMain';
+      const main = document.getElementById(mainId);
+      main.innerHTML = `
+        <div class="page-header"><h1>${title}</h1>${subtitle?`<p>${subtitle}</p>`:''}</div>
+        ${content}
+      `;
+    }
+  };
+
+  /* ===== CATEGORIES ===== */
+  const Categories = {
+    validatePrefix(prefix, excludeId) {
+      if (!/^[A-Z]{3}$/.test(prefix)) return 'Prefix phải là 3 chữ cái in hoa (A-Z)';
+      if (BANNED_PREFIXES.includes(prefix)) return 'Prefix bị cấm: ' + BANNED_PREFIXES.join(', ');
+      return null;
+    },
+    async list() {
+      try {
+        const all = await Store.cats();
+        const headers = ['ID','Tên danh mục','Prefix','Trạng thái',''];
+        const rows = all.map(c => [c.id, c.name, c.prefix, UI.statusBadge(c.isActive?'active':'resigned'), `<div class="btn-group"><button class="btn btn-outline btn-sm" onclick="App.Categories.edit('${c.id}')"><i class="fas fa-edit"></i></button><button class="btn btn-outline btn-sm" onclick="App.Categories.toggleActive('${c.id}')">${c.isActive?'<i class="fas fa-eye-slash"></i>':'<i class="fas fa-eye"></i>'}</button></div>`]);
+        const html = `<div class="card"><div class="card-header"><h3>Danh sách danh mục</h3><button class="btn btn-primary" onclick="App.Categories.showAdd()"><i class="fas fa-plus"></i> Thêm danh mục</button></div>${UI.renderTable(headers, rows)}</div>`;
+        Router.renderPage('Quản lý Danh mục', 'Thêm, sửa, ẩn danh mục tài sản', html);
+      } catch(e) { UI.toast(e.message,'error'); }
+    },
+    showAdd() {
+      UI.modal(`<h3>Thêm Danh mục Mới</h3><div class="form-group"><label>Tên danh mục *</label><input type="text" id="catName" placeholder="VD: Laptop"></div><div class="form-group"><label>Prefix (3 chữ hoa) *</label><input type="text" id="catPrefix" placeholder="VD: LAP" maxlength="3" style="text-transform:uppercase"></div><div class="modal-actions"><button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Hủy</button><button class="btn btn-primary" onclick="App.Categories.save()">Lưu</button></div>`);
+    },
+    async save() {
+      try {
+        const name = document.getElementById('catName').value.trim();
+        const prefix = document.getElementById('catPrefix').value.trim().toUpperCase();
+        if (!name) { UI.toast('Vui lòng nhập tên danh mục','error'); return; }
+        const err = this.validatePrefix(prefix);
+        if (err) { UI.toast(err,'error'); return; }
+        await API.post('/categories', {name, prefix});
+        document.querySelector('.modal-overlay').remove();
+        UI.toast('Thêm danh mục thành công','success');
+        this.list();
+      } catch(e) { UI.toast(e.message,'error'); }
+    },
+    async edit(id) {
+      try {
+        const cats = await Store.cats();
+        const cat = cats.find(c => c.id === id);
+        if (!cat) return;
+        UI.modal(`<h3>Sửa Danh mục</h3><div class="form-group"><label>Tên danh mục *</label><input type="text" id="catName" value="${UI.escapeHtml(cat.name)}"></div><div class="form-group"><label>Prefix (3 chữ hoa) *</label><input type="text" id="catPrefix" value="${cat.prefix}" maxlength="3" style="text-transform:uppercase"></div><p style="font-size:0.82rem;color:var(--warning);margin-bottom:12px;"><i class="fas fa-exclamation-triangle"></i> Đổi prefix sẽ cập nhật tất cả mã tài sản liên quan!</p><div class="modal-actions"><button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Hủy</button><button class="btn btn-primary" onclick="App.Categories.update('${id}')">Cập nhật</button></div>`);
+      } catch(e) { UI.toast(e.message,'error'); }
+    },
+    async update(id) {
+      try {
+        const name = document.getElementById('catName').value.trim();
+        const prefix = document.getElementById('catPrefix').value.trim().toUpperCase();
+        if (!name) { UI.toast('Vui lòng nhập tên danh mục','error'); return; }
+        const err = this.validatePrefix(prefix, id);
+        if (err) { UI.toast(err,'error'); return; }
+        const cats = await Store.cats();
+        const cat = cats.find(c => c.id === id);
+        if (cat.prefix !== prefix) {
+          if (!await UI.confirm(`Đổi prefix từ ${cat.prefix} sang ${prefix} sẽ cập nhật tất cả mã tài sản liên quan. Tiếp tục?`)) return;
+        }
+        await API.put('/categories', {id, name, prefix});
+        document.querySelector('.modal-overlay').remove();
+        UI.toast('Cập nhật danh mục thành công','success');
+        this.list();
+      } catch(e) { UI.toast(e.message,'error'); }
+    },
+    async toggleActive(id) {
+      try {
+        const cats = await Store.cats();
+        const cat = cats.find(c => c.id === id);
+        if (!cat) return;
+        await API.put('/categories', {id, isActive:!cat.isActive});
+        UI.toast(cat.isActive ? 'Đã ẩn danh mục' : 'Đã hiển thị danh mục','success');
+        this.list();
+      } catch(e) { UI.toast(e.message,'error'); }
+    }
+  };
+
+  /* ===== EMPLOYEES ===== */
+  const Employees = {
+    async list() {
+      try {
+        const all = await Store.emps();
+        const filterStatus = State.filters['empStatus'] || 'all';
+        const filtered = filterStatus==='all' ? all : all.filter(e => e.status===filterStatus);
+        const headers = ['Mã NV','Tên nhân viên','Team','Trạng thái',''];
+        const rows = filtered.map(e => [e.id, e.name, e.team, UI.statusBadge(e.status), `<div class="btn-group"><button class="btn btn-outline btn-sm" onclick="App.Employees.edit('${e.id}')"><i class="fas fa-edit"></i></button>${e.status==='active'?`<button class="btn btn-warning btn-sm" onclick="App.Employees.resign('${e.id}')"><i class="fas fa-user-times"></i> Nghỉ việc</button>`:''}</div>`]);
+        const html = `<div class="card"><div class="card-header"><h3>Danh sách nhân viên</h3><button class="btn btn-primary" onclick="App.Employees.showAdd()"><i class="fas fa-plus"></i> Thêm nhân viên</button></div><div class="table-filter-row"><select onchange="App.State.filters['empStatus']=this.value;App.Employees.list()"><option value="all">Tất cả</option><option value="active" ${filterStatus==='active'?'selected':''}>Đang làm</option><option value="resigned" ${filterStatus==='resigned'?'selected':''}>Nghỉ việc</option></select></div>${UI.renderTable(headers, rows)}</div>`;
+        Router.renderPage('Quản lý Nhân viên', 'Thêm, sửa, quản lý nhân viên', html);
+      } catch(e) { UI.toast(e.message,'error'); }
+    },
+    async showAdd() {
+      try {
+        const teams = await Store.tms();
+        UI.modal(`<h3>Thêm Nhân viên</h3><div class="form-group"><label>Mã NV (4 chữ số) *</label><input type="text" id="empId" placeholder="VD: 1004" maxlength="4"></div><div class="form-group"><label>Tên nhân viên *</label><input type="text" id="empName" placeholder="Nhập họ tên"></div><div class="form-group"><label>Team *</label><select id="empTeam">${teams.map(t=>`<option value="${t}">${t}</option>`).join('')}</select></div><div class="modal-actions"><button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Hủy</button><button class="btn btn-primary" onclick="App.Employees.save()">Lưu</button></div>`);
+      } catch(e) { UI.toast(e.message,'error'); }
+    },
+    async save() {
+      try {
+        const id = document.getElementById('empId').value.trim();
+        const name = document.getElementById('empName').value.trim();
+        const team = document.getElementById('empTeam').value;
+        if (!/^\d{4}$/.test(id)) { UI.toast('Mã nhân viên phải là 4 chữ số','error'); return; }
+        if (!name) { UI.toast('Vui lòng nhập tên nhân viên','error'); return; }
+        await API.post('/employees', {id, name, team});
+        document.querySelector('.modal-overlay').remove();
+        UI.toast('Thêm nhân viên thành công','success');
+        this.list();
+      } catch(e) { UI.toast(e.message,'error'); }
+    },
+    async edit(id) {
+      try {
+        const emps = await Store.emps();
+        const emp = emps.find(e=>e.id===id);
+        if (!emp) return;
+        const teams = await Store.tms();
+        UI.modal(`<h3>Sửa Nhân viên</h3><div class="form-group"><label>Mã NV</label><input type="text" value="${emp.id}" disabled></div><div class="form-group"><label>Tên nhân viên *</label><input type="text" id="empName" value="${UI.escapeHtml(emp.name)}"></div><div class="form-group"><label>Team *</label><select id="empTeam">${teams.map(t=>`<option value="${t}" ${t===emp.team?'selected':''}>${t}</option>`).join('')}</select></div><div class="form-group"><label>Trạng thái</label><select id="empStatus"><option value="active" ${emp.status==='active'?'selected':''}>Đang làm</option><option value="resigned" ${emp.status==='resigned'?'selected':''}>Nghỉ việc</option></select></div><div class="modal-actions"><button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Hủy</button><button class="btn btn-primary" onclick="App.Employees.update('${id}')">Cập nhật</button></div>`);
+      } catch(e) { UI.toast(e.message,'error'); }
+    },
+    async update(id) {
+      try {
+        const name = document.getElementById('empName').value.trim();
+        const team = document.getElementById('empTeam').value;
+        const status = document.getElementById('empStatus').value;
+        if (!name) { UI.toast('Vui lòng nhập tên nhân viên','error'); return; }
+        await API.put('/employees', {id, name, team, status});
+        document.querySelector('.modal-overlay').remove();
+        UI.toast('Cập nhật nhân viên thành công','success');
+        this.list();
+      } catch(e) { UI.toast(e.message,'error'); }
+    },
+    async resign(id) {
+      try {
+        const emps = await Store.emps();
+        const emp = emps.find(e=>e.id===id);
+        if (!emp||emp.status!=='active') return;
+        if (!await UI.confirm(`Xác nhận cho nhân viên ${emp.name} (${emp.id}) nghỉ việc? Tất cả tài sản đang mượn sẽ bị thu hồi.`)) return;
+        await API.put('/employees', {id, name:emp.name, team:emp.team, status:'resigned'});
+        UI.toast('Đã cập nhật nghỉ việc và thu hồi tài sản','success');
+        this.list();
+      } catch(e) { UI.toast(e.message,'error'); }
+    }
+  };
+
+  /* ===== ASSETS ===== */
+  const Assets = {
+    async generateId(prefix) {
+      const today = new Date().toISOString().slice(0,10).replace(/-/g,'');
+      const asts = await Store.asts();
+      let max = 0;
+      asts.forEach(a => { if (a.assetId&&a.assetId.startsWith(prefix+today)) { const n=parseInt(a.assetId.slice(-3)); if(n>max)max=n; } });
+      if (max>=999) return null;
+      return prefix+today+String(max+1).padStart(3,'0');
+    },
+    async list() {
+      try {
+        const cats = await Store.cats();
+        const all = await Store.asts();
+        const filterCat = State.filters['astCat']||'all';
+        const filterStatus = State.filters['astStatus']||'all';
+        const searchTerm = (State.filters['astSearch']||'').toLowerCase();
+        let filtered = all;
+        if (filterCat!=='all') filtered = filtered.filter(a => a.categoryId===filterCat);
+        if (filterStatus!=='all') filtered = filtered.filter(a => a.status===filterStatus);
+        if (searchTerm) filtered = filtered.filter(a => a.assetId && a.assetId.toLowerCase().includes(searchTerm));
+        const headers = ['Mã tài sản','Danh mục','Số lượng','Trạng thái','Ngày thêm','Ghi chú',''];
+        const rows = filtered.map(a => { const cat=cats.find(c=>c.id===a.categoryId); return [a.assetId,cat?cat.name:'N/A',a.quantity,a.quantity===0?UI.badge('Hết hàng','danger'):UI.statusBadge(a.status),a.addedDate,a.notes||'',`<div class="btn-group"><button class="btn btn-outline btn-sm" onclick="App.Assets.edit('${a.assetId}')"><i class="fas fa-edit"></i></button><button class="btn btn-outline btn-sm" onclick="App.Assets.printLabel('${a.assetId}')"><i class="fas fa-print"></i></button><input type="checkbox" class="print-check" value="${a.assetId}" style="margin-left:4px;"></div>`]; });
+        const html = `<div class="card"><div class="card-header"><h3>Danh sách tài sản</h3><div class="btn-group"><button class="btn btn-outline btn-sm" onclick="App.Assets.printSelected()"><i class="fas fa-print"></i> In tem đã chọn</button><button class="btn btn-primary" onclick="App.Assets.showAdd()"><i class="fas fa-plus"></i> Thêm tài sản</button></div></div><div class="table-filter-row"><select onchange="App.State.filters['astCat']=this.value;App.Assets.list()"><option value="all">Tất cả danh mục</option>${cats.map(c=>`<option value="${c.id}" ${filterCat===c.id?'selected':''}>${c.name}</option>`).join('')}</select><select onchange="App.State.filters['astStatus']=this.value;App.Assets.list()"><option value="all">Tất cả trạng thái</option><option value="in_stock" ${filterStatus==='in_stock'?'selected':''}>Còn hàng</option><option value="assigned" ${filterStatus==='assigned'?'selected':''}>Đã cấp</option><option value="broken" ${filterStatus==='broken'?'selected':''}>Hỏng</option></select><input type="text" placeholder="Tìm mã tài sản..." value="${UI.escapeHtml(searchTerm)}" oninput="App.State.filters['astSearch']=this.value;App.Assets.list()"></div>${UI.renderTable(headers, rows)}</div>`;
+        Router.renderPage('Quản lý Tài sản', 'Thêm, sửa, in tem tài sản', html);
+      } catch(e) { UI.toast(e.message,'error'); }
+    },
+    async showAdd() {
+      try {
+        const cats = (await Store.cats()).filter(c=>c.isActive);
+        if (cats.length===0) { UI.toast('Chưa có danh mục nào đang hoạt động','warning'); return; }
+        const todayStr = new Date().toISOString().slice(0,10);
+        const autoId = await this.generateId(cats[0].prefix);
+        UI.modal(`<h3>Thêm Tài sản Mới</h3><div class="form-group"><label>Danh mục *</label><select id="astCat" onchange="App.Assets.refreshAutoId()">${cats.map(c=>`<option value="${c.id}" data-prefix="${c.prefix}">${c.name} (${c.prefix})</option>`).join('')}</select></div><div class="form-group"><label>Mã tài sản</label><input type="text" id="astId" value="${autoId||''}" placeholder="Tự sinh hoặc nhập thủ công"><span class="hint" id="astIdHint">Format: PREFIX+YYYYMMDD+XXX. Để trống để tự sinh.</span></div><div class="form-group"><label>Số lượng *</label><input type="number" id="astQty" value="1" min="1"></div><div class="form-group"><label>Ngày thêm</label><input type="date" id="astDate" value="${todayStr}"></div><div class="form-group"><label>Ghi chú</label><textarea id="astNote" rows="2"></textarea></div><div class="modal-actions"><button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Hủy</button><button class="btn btn-primary" onclick="App.Assets.save()">Lưu</button></div>`);
+      } catch(e) { UI.toast(e.message,'error'); }
+    },
+    async refreshAutoId() {
+      const sel = document.getElementById('astCat');
+      const prefix = sel.options[sel.selectedIndex].dataset.prefix;
+      const autoId = await this.generateId(prefix);
+      document.getElementById('astId').value = autoId||'';
+      document.getElementById('astIdHint').textContent = autoId ? 'Format: PREFIX+YYYYMMDD+XXX' : 'Đã đạt tối đa 999 mã trong ngày!';
+    },
+    async save() {
+      try {
+        const sel = document.getElementById('astCat');
+        let assetId = document.getElementById('astId').value.trim();
+        const qty = parseInt(document.getElementById('astQty').value)||1;
+        const date = document.getElementById('astDate').value;
+        const notes = document.getElementById('astNote').value.trim();
+        const categoryId = sel.value;
+        if (qty<1) { UI.toast('Số lượng phải >= 1','error'); return; }
+        await API.post('/assets', {assetId:assetId||'', categoryId, quantity:qty, addedDate:date, notes});
+        document.querySelector('.modal-overlay').remove();
+        UI.toast('Thêm tài sản thành công','success');
+        this.list();
+      } catch(e) { UI.toast(e.message,'error'); }
+    },
+    async edit(assetId) {
+      try {
+        const asts = await Store.asts();
+        const ast = asts.find(a=>a.assetId===assetId);
+        if (!ast) return;
+        UI.modal(`<h3>Sửa Tài sản</h3><div class="form-group"><label>Mã tài sản</label><input type="text" value="${ast.assetId}" disabled></div><div class="form-group"><label>Số lượng *</label><input type="number" id="astQty" value="${ast.quantity}" min="0"></div><div class="form-group"><label>Trạng thái</label><select id="astStatus"><option value="in_stock" ${ast.status==='in_stock'?'selected':''}>Còn hàng</option><option value="broken" ${ast.status==='broken'?'selected':''}>Hỏng</option></select></div><div class="form-group"><label>Ghi chú</label><textarea id="astNote" rows="2">${UI.escapeHtml(ast.notes||'')}</textarea></div><div class="modal-actions"><button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Hủy</button><button class="btn btn-primary" onclick="App.Assets.update('${assetId}')">Cập nhật</button></div>`);
+      } catch(e) { UI.toast(e.message,'error'); }
+    },
+    async update(assetId) {
+      try {
+        const qty = parseInt(document.getElementById('astQty').value);
+        const status = document.getElementById('astStatus').value;
+        const notes = document.getElementById('astNote').value.trim();
+        if (isNaN(qty)||qty<0) { UI.toast('Số lượng phải >= 0','error'); return; }
+        await API.put('/assets', {assetId, quantity:qty, status, notes});
+        document.querySelector('.modal-overlay').remove();
+        UI.toast('Cập nhật tài sản thành công','success');
+        this.list();
+      } catch(e) { UI.toast(e.message,'error'); }
+    },
+    async printLabel(assetId) {
+      const asts = await Store.asts();
+      const ast = asts.find(a=>a.assetId===assetId);
+      if (!ast) return;
+      const cats = await Store.cats();
+      const cat = cats.find(c=>c.id===ast.categoryId);
+      this._showPrintWindow([{assetId:ast.assetId, catName:cat?cat.name:'N/A'}]);
+    },
+    async printSelected() {
+      const checks = document.querySelectorAll('.print-check:checked');
+      if (checks.length===0) { UI.toast('Vui lòng chọn ít nhất một tài sản','warning'); return; }
+      const asts = await Store.asts();
+      const cats = await Store.cats();
+      const labels = [];
+      checks.forEach(cb=>{ const ast=asts.find(a=>a.assetId===cb.value); if(ast){const cat=cats.find(c=>c.id===ast.categoryId); labels.push({assetId:ast.assetId,catName:cat?cat.name:'N/A'});} });
+      this._showPrintWindow(labels);
+    },
+    _showPrintWindow(labels) {
+      let h='<html><head><meta charset="UTF-8"><title>In Tem</title><style>body{font-family:sans-serif;display:flex;flex-wrap:wrap;gap:20px;padding:20px;justify-content:center;}.label{border:2px dashed #333;padding:24px 18px;text-align:center;width:240px;page-break-inside:avoid;}.label .code{font-size:1.6rem;font-weight:bold;}.label .cat{font-size:0.9rem;color:#666;margin-top:6px;}.qr{width:100px;height:100px;background:#eee;margin:12px auto;display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:#999;}@media print{body{margin:0;padding:10px;}}</style></head><body>';
+      labels.forEach(l=>{h+=`<div class="label"><div class="code">${l.assetId}</div><div class="qr">[QR]</div><div class="cat">${l.catName}</div></div>`;});
+      h+='<script>window.onload=function(){window.print();setTimeout(function(){window.close();},500);}<\/script></body></html>';
+      const w=window.open('','_blank','width=700,height=500'); w.document.write(h); w.document.close();
+    }
+  };
+
+  /* ===== ASSIGNMENTS ===== */
+  const Assignments = {
+    async showAssign() {
+      try {
+        const emps = (await Store.emps()).filter(e=>e.status==='active');
+        const asts = (await Store.asts()).filter(a=>a.quantity>0&&a.status==='in_stock');
+        const cats = await Store.cats();
+        const content = `<div class="card"><div class="card-header"><h3>Cấp phát tài sản</h3></div><div class="form-grid"><div class="form-group"><label>Nhân viên *</label><select id="asgEmp"><option value="">-- Chọn nhân viên --</option>${emps.map(e=>`<option value="${e.id}">${e.id} - ${e.name} (${e.team})</option>`).join('')}</select></div><div class="form-group"><label>Tài sản (còn hàng) *</label><select id="asgAst"><option value="">-- Chọn tài sản --</option>${asts.map(a=>{const c=cats.find(x=>x.id===a.categoryId);return`<option value="${a.assetId}">${a.assetId} - ${c?c.name:'N/A'} (Còn: ${a.quantity})</option>`;}).join('')}</select></div><div class="form-group"><label>Ngày cấp</label><input type="date" id="asgDate" value="${new Date().toISOString().slice(0,10)}"></div><div class="form-group"><label>Lý do *</label><textarea id="asgReason" rows="2" placeholder="Lý do cấp phát"></textarea></div></div><div class="form-actions"><button class="btn btn-primary" onclick="App.Assignments.assign()"><i class="fas fa-share"></i> Cấp phát</button></div></div>`;
+        Router.renderPage('Cấp phát Tài sản', 'Cấp phát tài sản trực tiếp cho nhân viên', content);
+      } catch(e) { UI.toast(e.message,'error'); }
+    },
+    async assign() {
+      try {
+        const empId = document.getElementById('asgEmp').value;
+        const assetId = document.getElementById('asgAst').value;
+        const date = document.getElementById('asgDate').value;
+        const reason = document.getElementById('asgReason').value.trim();
+        if (!empId) { UI.toast('Vui lòng chọn nhân viên','error'); return; }
+        if (!assetId) { UI.toast('Vui lòng chọn tài sản','error'); return; }
+        if (!reason) { UI.toast('Vui lòng nhập lý do','error'); return; }
+        await API.post('/assignments', {assetId, employeeId:empId, assignedDate:date, reason, performedBy:State.currentUser.role});
+        UI.toast('Cấp phát thành công','success');
+        ['asgEmp','asgAst','asgReason'].forEach(id=>{document.getElementById(id).value='';});
+      } catch(e) { UI.toast(e.message,'error'); }
+    }
+  };
+
+  /* ===== REQUESTS ===== */
+  const Requests = {
+    async showEmpCreate() {
+      try {
+        const cats = (await Store.cats()).filter(c=>c.isActive);
+        const asts = (await Store.asts()).filter(a=>a.quantity>0&&a.status==='in_stock');
+        const content = `<div class="card"><div class="card-header"><h3>Tạo Yêu cầu Mới</h3></div><div class="form-group"><label>Loại yêu cầu *</label><select id="reqType" onchange="App.Requests.toggleReqType()"><option value="existing">Yêu cầu tài sản có sẵn</option><option value="new">Yêu cầu tài sản mới</option></select></div><div id="reqExistingGroup"><div class="form-group"><label>Tài sản *</label><select id="reqAstId"><option value="">-- Chọn tài sản --</option>${asts.map(a=>{const c=cats.find(x=>x.id===a.categoryId);return`<option value="${a.assetId}">${a.assetId} - ${c?c.name:'N/A'} (${a.quantity})</option>`;}).join('')}</select></div></div><div id="reqNewGroup" style="display:none"><div class="form-group"><label>Danh mục *</label><select id="reqCatId">${cats.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}</select></div><div class="form-group"><label>Mô tả *</label><textarea id="reqDesc" rows="2" placeholder="Mô tả chi tiết"></textarea></div></div><div class="form-group"><label>Lý do *</label><textarea id="reqReason" rows="2" placeholder="Lý do yêu cầu"></textarea></div><div class="form-actions"><button class="btn btn-primary" onclick="App.Requests.empCreate()"><i class="fas fa-paper-plane"></i> Gửi yêu cầu</button></div></div>`;
+        Router.renderPage('Tạo Yêu cầu', 'Gửi yêu cầu cấp phát hoặc mua mới tài sản', content);
+      } catch(e) { UI.toast(e.message,'error'); }
+    },
+    toggleReqType() {
+      const type = document.getElementById('reqType').value;
+      UI.show(type==='existing'?'reqExistingGroup':'reqNewGroup');
+      UI.hide(type==='existing'?'reqNewGroup':'reqExistingGroup');
+    },
+    async empCreate() {
+      try {
+        const type = document.getElementById('reqType').value;
+        const reason = document.getElementById('reqReason').value.trim();
+        if (!reason) { UI.toast('Vui lòng nhập lý do','error'); return; }
+        const body = {employeeId:State.currentUser.userId, type, reason, performedBy:'employee'};
+        if (type==='existing') { body.assetId = document.getElementById('reqAstId').value; if(!body.assetId){UI.toast('Vui lòng chọn tài sản','error');return;} }
+        else { body.categoryId = document.getElementById('reqCatId').value; body.description = document.getElementById('reqDesc').value.trim(); if(!body.categoryId){UI.toast('Vui lòng chọn danh mục','error');return;} if(!body.description){UI.toast('Vui lòng nhập mô tả','error');return;} }
+        await API.post('/requests', body);
+        UI.toast('Gửi yêu cầu thành công','success');
+        this.showEmpList();
+      } catch(e) { UI.toast(e.message,'error'); }
+    },
+    async showEmpList() {
+      try {
+        const cats = await Store.cats();
+        const all = await Store.reqs();
+        const filterStatus = State.filters['reqStatus']||'all';
+        let filtered = all.filter(r => r.employeeId===State.currentUser.userId);
+        if (filterStatus!=='all') filtered = filtered.filter(r => r.status===filterStatus);
+        const headers = ['Mã YC','Loại','Tài sản/Danh mục','Lý do','Ngày','Trạng thái','Ghi chú Admin'];
+        const rows = filtered.map(r=>{const cat=r.categoryId?cats.find(c=>c.id===r.categoryId):null;return[r.requestId,r.type==='existing'?'Có sẵn':'Mua mới',r.type==='existing'?(r.assetId||''):(cat?cat.name:'')+(r.description?': '+r.description:''),r.reason,r.date,UI.statusBadge(r.status),r.adminNote||''];});
+        const content = `<div class="card"><div class="card-header"><h3>Yêu cầu của tôi</h3><button class="btn btn-primary" onclick="App.Requests.showEmpCreate()"><i class="fas fa-plus"></i> Tạo yêu cầu</button></div><div class="table-filter-row"><select onchange="App.State.filters['reqStatus']=this.value;App.Requests.showEmpList()"><option value="all">Tất cả</option><option value="pending" ${filterStatus==='pending'?'selected':''}>Chờ duyệt</option><option value="approved" ${filterStatus==='approved'?'selected':''}>Đã duyệt</option><option value="rejected" ${filterStatus==='rejected'?'selected':''}>Từ chối</option><option value="fulfilled" ${filterStatus==='fulfilled'?'selected':''}>Đã cấp</option></select></div>${UI.renderTable(headers, rows)}</div>`;
+        Router.renderPage('Yêu cầu của tôi', 'Xem danh sách yêu cầu đã gửi', content);
+      } catch(e) { UI.toast(e.message,'error'); }
+    },
+    async showAdminMgmt(tab) {
+      try {
+        tab = tab||'pending';
+        State.filters['reqTab'] = tab;
+        const cats = await Store.cats();
+        const emps = await Store.emps();
+        const allReqs = await Store.reqs();
+        const filtered = allReqs.filter(r => r.status===tab);
+        // Get counts for all tabs
+        const tabs = ['pending','approved','rejected','fulfilled'];
+        const tabLabels = {pending:'Chờ duyệt',approved:'Đã duyệt',rejected:'Từ chối',fulfilled:'Đã cấp'};
+        let tabHTML = '<div class="tabs">';
+        tabs.forEach(t=>{const count=allReqs.filter(r=>r.status===t).length;tabHTML+=`<div class="tab ${t===tab?'active':''}" onclick="App.Requests.showAdminMgmt('${t}')">${tabLabels[t]} (${count})</div>`;});
+        tabHTML += '</div>';
+        const headers = ['Mã YC','Nhân viên','Loại','Chi tiết','Lý do','Ngày','Trạng thái',''];
+        const rows = filtered.map(r=>{
+          const emp=emps.find(e=>e.id===r.employeeId);
+          const cat=r.categoryId?cats.find(c=>c.id===r.categoryId):null;
+          let actions='';
+          if(r.status==='pending'){
+            if(r.type==='existing'){actions+=`<button class="btn btn-success btn-sm" onclick="App.Requests.fulfillExisting('${r.requestId}')"><i class="fas fa-check"></i> Cấp</button> `;}
+            else{actions+=`<button class="btn btn-success btn-sm" onclick="App.Requests.approve('${r.requestId}')"><i class="fas fa-check"></i> Duyệt</button> `;}
+            actions+=`<button class="btn btn-danger btn-sm" onclick="App.Requests.reject('${r.requestId}')"><i class="fas fa-times"></i> Từ chối</button>`;
+          }else if(r.status==='approved'&&r.type==='new'){actions+=`<button class="btn btn-primary btn-sm" onclick="App.Requests.fulfillNew('${r.requestId}')"><i class="fas fa-box"></i> Thêm & Cấp</button>`;}
+          return[r.requestId,emp?`${emp.id} - ${emp.name}`:r.employeeId,r.type==='existing'?'Có sẵn':'Mua mới',r.type==='existing'?(r.assetId||''):(cat?cat.name:'')+(r.description?': '+r.description:''),r.reason,r.date,UI.statusBadge(r.status),actions];
+        });
+        const content = `<div class="card"><div class="card-header"><h3>Quản lý Yêu cầu</h3></div>${tabHTML}${UI.renderTable(headers, rows)}</div>`;
+        Router.renderPage('Quản lý Yêu cầu', 'Duyệt, từ chối, fulfill yêu cầu từ nhân viên', content);
+      } catch(e) { UI.toast(e.message,'error'); }
+    },
+    async fulfillExisting(reqId) {
+      try {
+        await API.put('/requests', {requestId:reqId, status:'fulfilled', performedBy:'admin'});
+        UI.toast('Đã cấp phát thành công','success');
+        this.showAdminMgmt('pending');
+      } catch(e) { UI.toast(e.message,'error'); }
+    },
+    async approve(reqId) {
+      try {
+        await API.put('/requests', {requestId:reqId, status:'approved', performedBy:'admin'});
+        UI.toast('Đã duyệt yêu cầu','success');
+        this.showAdminMgmt('pending');
+      } catch(e) { UI.toast(e.message,'error'); }
+    },
+    async reject(reqId) {
+      const note = prompt('Nhập lý do từ chối (bắt buộc):');
+      if (!note||!note.trim()) { UI.toast('Phải nhập lý do từ chối','error'); return; }
+      try {
+        await API.put('/requests', {requestId:reqId, status:'rejected', adminNote:note.trim(), performedBy:'admin'});
+        UI.toast('Đã từ chối yêu cầu','success');
+        this.showAdminMgmt('pending');
+      } catch(e) { UI.toast(e.message,'error'); }
+    },
+    async fulfillNew(reqId) {
+      try {
+        const reqs = await Store.reqs();
+        const req = reqs.find(r=>r.requestId===reqId);
+        if(!req||req.status!=='approved') return;
+        const cats = await Store.cats();
+        const cat = cats.find(c=>c.id===req.categoryId);
+        if(!cat){UI.toast('Danh mục không tồn tại','error');return;}
+        const autoId = await Assets.generateId(cat.prefix);
+        UI.modal(`<h3>Thêm vào kho & Cấp phát</h3><p style="margin-bottom:12px;font-size:0.9rem;">Yêu cầu: <strong>${reqId}</strong> — NV: <strong>${req.employeeId}</strong></p><div class="form-group"><label>Mã tài sản mới</label><input type="text" id="fulfillAstId" value="${autoId||''}"><span class="hint">Để trống để tự sinh</span></div><div class="form-group"><label>Số lượng</label><input type="number" id="fulfillQty" value="1" min="1"></div><div class="form-group"><label>Ghi chú</label><textarea id="fulfillNote" rows="2"></textarea></div><div class="modal-actions"><button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Hủy</button><button class="btn btn-primary" onclick="App.Requests.doFulfillNew('${reqId}')">Xác nhận</button></div>`);
+      } catch(e) { UI.toast(e.message,'error'); }
+    },
+    async doFulfillNew(reqId) {
+      try {
+        let assetId = document.getElementById('fulfillAstId').value.trim();
+        const qty = parseInt(document.getElementById('fulfillQty').value)||1;
+        const note = document.getElementById('fulfillNote').value.trim();
+        if(qty<1){UI.toast('Số lượng phải >= 1','error');return;}
+        const reqs = await Store.reqs();
+        const req = reqs.find(r=>r.requestId===reqId);
+        if(!req) return;
+        // Create asset via API
+        await API.post('/assets', {assetId:assetId||'', categoryId:req.categoryId, quantity:qty, notes:note});
+        // Create assignment
+        const actualId = assetId || document.getElementById('fulfillAstId').value;
+        await API.post('/assignments', {assetId:actualId, employeeId:req.employeeId, assignedDate:new Date().toISOString().slice(0,10), reason:req.reason, performedBy:'admin'});
+        // Update request to fulfilled
+        await API.put('/requests', {requestId:reqId, status:'fulfilled', fulfilledAssetId:actualId, performedBy:'admin'});
+        document.querySelector('.modal-overlay').remove();
+        UI.toast('Đã thêm vào kho và cấp phát thành công','success');
+        this.showAdminMgmt('approved');
+      } catch(e) { UI.toast(e.message,'error'); }
+    }
+  };
+
+  /* ===== REVOKE ===== */
+  const Revoke = {
+    showOptions() {
+      Router.renderPage('Thu hồi Tài sản', 'Chọn phương thức thu hồi', `<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px"><div class="card" style="cursor:pointer" onclick="App.Revoke.byAsset()"><h3><i class="fas fa-box"></i> Thu hồi theo Tài sản</h3><p style="color:var(--text-secondary);margin-top:8px">Chọn tài sản đã cấp, thu hồi từng assignment.</p></div><div class="card" style="cursor:pointer" onclick="App.Revoke.byEmployee()"><h3><i class="fas fa-user"></i> Thu hồi theo Nhân viên</h3><p style="color:var(--text-secondary);margin-top:8px">Thu hồi từng cái hoặc tất cả.</p></div></div>`);
+    },
+    async byAsset() {
+      try {
+        const asgs = await Store.asgs();
+        const asts = await Store.asts();
+        const cats = await Store.cats();
+        const assigned = [...new Set(asgs.map(a=>a.assetId))];
+        Router.renderPage('Thu hồi theo Tài sản', '', `<div class="card"><div class="card-header"><h3>Thu hồi theo Tài sản</h3></div><div class="form-group"><label>Chọn tài sản đã cấp</label><select id="revokeAst" onchange="App.Revoke.showAssetAssignments()"><option value="">-- Chọn --</option>${assigned.map(id=>{const a=asts.find(x=>x.assetId===id);const c=a?cats.find(x=>x.id===a.categoryId):null;return`<option value="${id}">${id} - ${c?c.name:'N/A'}</option>`;}).join('')}</select></div><div id="revokeAstAssignments"></div></div>`);
+      } catch(e) { UI.toast(e.message,'error'); }
+    },
+    async showAssetAssignments() {
+      const assetId = document.getElementById('revokeAst').value;
+      if(!assetId){document.getElementById('revokeAstAssignments').innerHTML='';return;}
+      try {
+        const asgs = (await Store.asgs()).filter(a=>a.assetId===assetId);
+        const emps = await Store.emps();
+        let html = '<h4 style="margin-bottom:12px">Danh sách assignment</h4>';
+        if(asgs.length===0) html+=UI.emptyState('Không có assignment nào');
+        else{html+='<table><thead><tr><th>ID</th><th>Nhân viên</th><th>Ngày cấp</th><th>Lý do</th><th></th></tr></thead><tbody>';asgs.forEach(a=>{const emp=emps.find(e=>e.id===a.employeeId);html+=`<tr><td>${a.id}</td><td>${emp?emp.name:a.employeeId}</td><td>${a.assignedDate}</td><td>${a.reason}</td><td><button class="btn btn-danger btn-sm" onclick="App.Revoke.doRevokeSingle('${a.id}')"><i class="fas fa-undo"></i> Thu hồi</button></td></tr>`;});html+='</tbody></table>';}
+        document.getElementById('revokeAstAssignments').innerHTML = html;
+      } catch(e) { UI.toast(e.message,'error'); }
+    },
+    async byEmployee() {
+      try {
+        const emps = (await Store.emps()).filter(e=>e.status==='active');
+        const asgs = await Store.asgs();
+        const withAssets = emps.filter(e=>asgs.some(a=>a.employeeId===e.id));
+        Router.renderPage('Thu hồi theo Nhân viên', '', `<div class="card"><div class="card-header"><h3>Thu hồi theo Nhân viên</h3></div><div class="form-group"><label>Chọn nhân viên</label><select id="revokeEmp" onchange="App.Revoke.showEmployeeAssignments()"><option value="">-- Chọn --</option>${withAssets.map(e=>`<option value="${e.id}">${e.id} - ${e.name} (${e.team})</option>`).join('')}</select></div><div id="revokeEmpAssignments"></div></div>`);
+      } catch(e) { UI.toast(e.message,'error'); }
+    },
+    async showEmployeeAssignments() {
+      const empId = document.getElementById('revokeEmp').value;
+      if(!empId){document.getElementById('revokeEmpAssignments').innerHTML='';return;}
+      try {
+        const asgs = (await Store.asgs()).filter(a=>a.employeeId===empId);
+        const asts = await Store.asts();
+        const cats = await Store.cats();
+        const emps = await Store.emps();
+        const emp = emps.find(e=>e.id===empId);
+        let html = `<div class="card-header"><h4>Tài sản của ${emp?emp.name:empId}</h4><button class="btn btn-danger" onclick="App.Revoke.revokeAll('${empId}')"><i class="fas fa-undo"></i> Thu hồi tất cả</button></div>`;
+        if(asgs.length===0) html+=UI.emptyState('Không có tài sản nào');
+        else{html+='<table><thead><tr><th>ID</th><th>Mã TS</th><th>Danh mục</th><th>Ngày cấp</th><th></th></tr></thead><tbody>';asgs.forEach(a=>{const ast=asts.find(x=>x.assetId===a.assetId);const cat=ast?cats.find(c=>c.id===ast.categoryId):null;html+=`<tr><td>${a.id}</td><td>${a.assetId}</td><td>${cat?cat.name:'N/A'}</td><td>${a.assignedDate}</td><td><button class="btn btn-danger btn-sm" onclick="App.Revoke.doRevokeSingle('${a.id}')"><i class="fas fa-undo"></i> Thu hồi</button></td></tr>`;});html+='</tbody></table>';}
+        document.getElementById('revokeEmpAssignments').innerHTML = html;
+      } catch(e) { UI.toast(e.message,'error'); }
+    },
+    async doRevokeSingle(asgId) {
+      if(!await UI.confirm('Xác nhận thu hồi tài sản này?')) return;
+      try {
+        await API.del('/assignments', {id:asgId, performedBy:'admin'});
+        UI.toast('Thu hồi thành công','success');
+        if(document.getElementById('revokeAst')) App.Revoke.showAssetAssignments();
+        if(document.getElementById('revokeEmp')) App.Revoke.showEmployeeAssignments();
+      } catch(e) { UI.toast(e.message,'error'); }
+    },
+    async revokeAll(empId) {
+      try {
+        const emps = await Store.emps();
+        const emp = emps.find(e=>e.id===empId);
+        if(!emp) return;
+        if(!await UI.confirm(`Xác nhận thu hồi TẤT CẢ tài sản của ${emp.name} (${emp.id})?`)) return;
+        const result = await API.del('/assignments', {revokeAll:empId, performedBy:'admin'});
+        UI.toast(`Đã thu hồi ${result.revoked} tài sản của ${emp.name}`,'success');
+        document.getElementById('revokeEmp').value = '';
+        document.getElementById('revokeEmpAssignments').innerHTML = '';
+      } catch(e) { UI.toast(e.message,'error'); }
+    }
+  };
+
+  /* ===== HISTORY PAGE ===== */
+  const HistoryPage = {
+    async show() {
+      try {
+        const emps = await Store.emps();
+        const filterAction = State.filters['histAction']||'all';
+        const filterEmp = State.filters['histEmp']||'all';
+        const filterAsset = (State.filters['histAsset']||'').toLowerCase();
+        const all = await Store.hists();
+        let filtered = [...all].reverse(); // newest first
+        if (filterAction!=='all') filtered = filtered.filter(h => h.action===filterAction);
+        if (filterEmp!=='all') filtered = filtered.filter(h => h.employeeId===filterEmp);
+        if (filterAsset) filtered = filtered.filter(h => h.assetId && h.assetId.toLowerCase().includes(filterAsset));
+        const actionLabels = {assign:'Cấp phát',revoke:'Thu hồi',auto_revoke:'Tự động thu hồi',revoke_all:'Thu hồi tất cả',create_asset:'Thêm TS',update_asset:'Cập nhật TS',approve_request:'Duyệt YC',reject_request:'Từ chối YC',fulfill_request:'Fulfill YC'};
+        const headers = ['ID','Hành động','Mã TS','Nhân viên','Thời gian','Người thực hiện','Ghi chú'];
+        const rows = filtered.map(h=>{const emp=h.employeeId?emps.find(e=>e.id===h.employeeId):null;return[h.id,UI.badge(actionLabels[h.action]||h.action,'primary'),h.assetId||'',emp?`${emp.id} - ${emp.name}`:(h.employeeId||''),new Date(h.timestamp).toLocaleString('vi-VN'),h.performedBy,h.note];});
+        const content = `<div class="card"><div class="card-header"><h3>Lịch sử Hoạt động</h3><button class="btn btn-outline btn-sm" onclick="App.HistoryPage.exportData()"><i class="fas fa-download"></i> Xuất JSON</button></div><div class="table-filter-row"><select onchange="App.State.filters['histAction']=this.value;App.HistoryPage.show()"><option value="all">Tất cả</option>${ACTIONS.map(a=>`<option value="${a}" ${filterAction===a?'selected':''}>${a}</option>`).join('')}</select><select onchange="App.State.filters['histEmp']=this.value;App.HistoryPage.show()"><option value="all">Tất cả NV</option>${emps.map(e=>`<option value="${e.id}" ${filterEmp===e.id?'selected':''}>${e.id} - ${e.name}</option>`).join('')}</select><input type="text" placeholder="Tìm mã TS..." value="${UI.escapeHtml(filterAsset)}" oninput="App.State.filters['histAsset']=this.value;App.HistoryPage.show()"></div>${UI.renderTable(headers, rows)}</div>`;
+        Router.renderPage('Lịch sử Hoạt động', 'Xem toàn bộ lịch sử cấp phát, thu hồi, duyệt yêu cầu', content);
+      } catch(e) { UI.toast(e.message,'error'); }
+    },
+    async exportData() {
+      try {
+        const hists = await Store.hists();
+        console.log('HISTORY DATA:', JSON.stringify(hists, null, 2));
+        alert('Đã xuất dữ liệu ra console (F12).\nSố bản ghi: ' + hists.length);
+        UI.toast('Đã xuất dữ liệu ra console','success');
+      } catch(e) { UI.toast(e.message,'error'); }
+    }
+  };
+
+  /* ===== TEAMS ===== */
+  const Teams = {
+    async list() {
+      try {
+        const {teams} = await API.get('/teams');
+        const emps = await Store.emps();
+        const content = `<div class="card"><div class="card-header"><h3>Quản lý Teams</h3><button class="btn btn-primary" onclick="App.Teams.showAdd()"><i class="fas fa-plus"></i> Thêm team</button></div><table><thead><tr><th>Tên Team</th><th>Số NV</th><th></th></tr></thead><tbody>${teams.length===0?`<tr><td colspan="3">${UI.emptyState('Chưa có team nào')}</td></tr>`:teams.map(t=>{const count=emps.filter(e=>e.team===t).length;return`<tr><td>${t}</td><td>${count}</td><td class="btn-group"><button class="btn btn-outline btn-sm" onclick="App.Teams.edit('${UI.escapeHtml(t)}')"><i class="fas fa-edit"></i></button><button class="btn btn-outline btn-sm" onclick="App.Teams.remove('${UI.escapeHtml(t)}')" ${count>0?'disabled title="Không thể xóa team có nhân viên"':''}><i class="fas fa-trash"></i></button></td></tr>`;}).join('')}</tbody></table></div>`;
+        Router.renderPage('Quản lý Teams', 'Thêm, sửa, xóa team (Admin only)', content);
+      } catch(e) { UI.toast(e.message,'error'); }
+    },
+    showAdd() {
+      UI.modal(`<h3>Thêm Team Mới</h3><div class="form-group"><label>Tên team *</label><input type="text" id="teamName" placeholder="Nhập tên team" maxlength="50"></div><div class="modal-actions"><button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Hủy</button><button class="btn btn-primary" onclick="App.Teams.save()">Lưu</button></div>`);
+    },
+    async save() {
+      try {
+        const name = document.getElementById('teamName').value.trim();
+        if(!name){UI.toast('Tên team không được rỗng','error');return;}
+        if(name.length>50){UI.toast('Tên team tối đa 50 ký tự','error');return;}
+        await API.post('/teams', {name});
+        document.querySelector('.modal-overlay').remove();
+        UI.toast('Thêm team thành công','success');
+        this.list();
+      } catch(e) { UI.toast(e.message,'error'); }
+    },
+    edit(oldName) {
+      UI.modal(`<h3>Sửa Team: ${UI.escapeHtml(oldName)}</h3><div class="form-group"><label>Tên mới *</label><input type="text" id="teamName" value="${UI.escapeHtml(oldName)}" maxlength="50"></div><p style="font-size:0.82rem;color:var(--warning);margin-bottom:12px"><i class="fas fa-exclamation-triangle"></i> Đổi tên team sẽ cập nhật tất cả nhân viên thuộc team này.</p><div class="modal-actions"><button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Hủy</button><button class="btn btn-primary" onclick="App.Teams.update('${UI.escapeJs(oldName)}')">Cập nhật</button></div>`);
+    },
+    async update(oldName) {
+      try {
+        const newName = document.getElementById('teamName').value.trim();
+        if(!newName){UI.toast('Tên team không được rỗng','error');return;}
+        if(newName.length>50){UI.toast('Tên team tối đa 50 ký tự','error');return;}
+        await API.put('/teams', {oldName, newName});
+        document.querySelector('.modal-overlay').remove();
+        UI.toast('Cập nhật team thành công','success');
+        this.list();
+      } catch(e) { UI.toast(e.message,'error'); }
+    },
+    async remove(name) {
+      try {
+        if(!await UI.confirm(`Xác nhận xóa team "${name}"?`)) return;
+        await API.del('/teams', {name});
+        UI.toast('Xóa team thành công','success');
+        this.list();
+      } catch(e) { UI.toast(e.message,'error'); }
+    }
+  };
+
+  /* ===== DASHBOARD ===== */
+  const Dashboard = {
+    _instances: {},
+    async showAdmin() {
+      const asts = await Store.asts();
+      const asgs = await Store.asgs();
+      const reqs = await Store.reqs();
+      const cats = await Store.cats();
+      const emps = await Store.emps();
+      const {teams} = await API.get('/teams');
+      const totalQty = asts.reduce((s,a) => s + a.quantity, 0);
+      const assignedCount = asgs.length;
+      const pendingReqs = reqs.filter(r => r.status === 'pending').length;
+      const approvedUnfulfilled = reqs.filter(r => r.status === 'approved').length;
+      // Warning: pending > 3 days
+      const now = new Date();
+      const oldPending = reqs.filter(r => r.status === 'pending' && (now - new Date(r.date)) > 3*24*60*60*1000);
+      // Top 5 employees
+      const empBorrowCount = {};
+      asgs.forEach(a => { empBorrowCount[a.employeeId] = (empBorrowCount[a.employeeId]||0) + 1; });
+      const topEmpIds = Object.entries(empBorrowCount).sort((a,b) => b[1]-a[1]).slice(0,5);
+      // Pie data: assigned by team
+      const teamAssignCount = {};
+      teams.forEach(t => { teamAssignCount[t] = 0; });
+      asgs.forEach(a => {
+        const emp = emps.find(e => e.id === a.employeeId);
+        const t = emp ? emp.team : 'Unknown';
+        teamAssignCount[t] = (teamAssignCount[t]||0) + 1;
+      });
+      // Bar data: quantity by category
+      const catQty = {};
+      cats.forEach(c => { catQty[c.name] = 0; });
+      asts.forEach(a => {
+        const cat = cats.find(c => c.id === a.categoryId);
+        const name = cat ? cat.name : 'Unknown';
+        catQty[name] = (catQty[name]||0) + a.quantity;
+      });
+      let warningHTML = '';
+      if (oldPending.length > 0) {
+        warningHTML = `<div class="card" style="border-left:4px solid var(--warning);"><div class="card-header" style="color:var(--warning);"><i class="fas fa-exclamation-triangle"></i> Cảnh báo</div><p style="font-size:0.9rem;">Có <strong>${oldPending.length}</strong> yêu cầu pending quá 3 ngày cần xử lý!</p></div>`;
+      }
+      const topEmpHTML = topEmpIds.map(([eid, count]) => {
+        const emp = emps.find(e => e.id === eid);
+        return `<tr><td>${eid}</td><td>${emp?emp.name:'N/A'}</td><td>${emp?emp.team:'N/A'}</td><td><strong>${count}</strong></td></tr>`;
+      }).join('');
+      const content = `
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-icon" style="background:var(--primary-light);color:var(--primary);"><i class="fas fa-boxes"></i></div><div><div class="stat-value">${totalQty}</div><div class="stat-label">Tổng tài sản</div></div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:var(--success-light);color:var(--success);"><i class="fas fa-share"></i></div><div><div class="stat-value">${assignedCount}</div><div class="stat-label">Đang cấp phát</div></div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:var(--warning-light);color:var(--warning);"><i class="fas fa-inbox"></i></div><div><div class="stat-value">${pendingReqs}</div><div class="stat-label">Yêu cầu pending</div></div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:var(--primary-light);color:var(--primary);"><i class="fas fa-clock"></i></div><div><div class="stat-value">${approvedUnfulfilled}</div><div class="stat-label">Approved chưa fulfill</div></div></div>
+        </div>
+        ${warningHTML}
+        <div class="charts-grid">
+          <div class="chart-box"><h3><i class="fas fa-chart-pie"></i> Tài sản đang cấp theo Team</h3><canvas id="pieChart"></canvas></div>
+          <div class="chart-box"><h3><i class="fas fa-chart-bar"></i> Tổng tài sản theo Danh mục</h3><canvas id="barChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Top 5 Nhân viên mượn nhiều nhất</h3></div>
+          <table><thead><tr><th>Mã NV</th><th>Tên</th><th>Team</th><th>Số lượng</th></tr></thead><tbody>${topEmpHTML||`<tr><td colspan="4">${UI.emptyState('Chưa có dữ liệu')}</td></tr>`}</tbody></table>
+        </div>
+      `;
+      Router.renderPage('Dashboard', 'Tổng quan tài sản công ty', content);
+      // Charts
+      setTimeout(() => {
+        Object.values(this._instances).forEach(c => c.destroy());
+        this._instances = {};
+        const pieCtx = document.getElementById('pieChart');
+        const barCtx = document.getElementById('barChart');
+        if (pieCtx) {
+          const pieData = Object.entries(teamAssignCount).filter(([_,v]) => v > 0);
+          this._instances.pie = new Chart(pieCtx, {
+            type:'pie',
+            data:{labels:pieData.map(([k])=>k), datasets:[{data:pieData.map(([_,v])=>v), backgroundColor:['#4361ee','#f72585','#4cc9f0','#f8961e','#2ecc71','#b5179e','#7209b7','#f39c12']}]},
+            options:{responsive:true,plugins:{legend:{position:'bottom'}}}
+          });
+        }
+        if (barCtx) {
+          const barLabels = Object.keys(catQty);
+          const barValues = Object.values(catQty);
+          this._instances.bar = new Chart(barCtx, {
+            type:'bar',
+            data:{labels:barLabels, datasets:[{label:'Số lượng',data:barValues,backgroundColor:'#4361ee',borderRadius:4}]},
+            options:{responsive:true,scales:{y:{beginAtZero:true,ticks:{stepSize:1}}},plugins:{legend:{display:false}}}
+          });
+        }
+      }, 100);
+    },
+    async showEmp() {
+      const asgs = (await Store.asgs()).filter(a => a.employeeId === State.currentUser.userId);
+      const asts = await Store.asts();
+      const cats = await Store.cats();
+      let tableHTML = '';
+      if (asgs.length === 0) {
+        tableHTML = UI.emptyState('Bạn chưa mượn tài sản nào', 'box');
+      } else {
+        tableHTML = '<table><thead><tr><th>Mã tài sản</th><th>Danh mục</th><th>Ngày cấp</th><th>Lý do</th></tr></thead><tbody>';
+        asgs.forEach(a => {
+          const ast = asts.find(x => x.assetId === a.assetId);
+          const cat = ast ? cats.find(c => c.id === ast.categoryId) : null;
+          tableHTML += `<tr><td>${a.assetId}</td><td>${cat?cat.name:'N/A'}</td><td>${a.assignedDate}</td><td>${a.reason}</td></tr>`;
+        });
+        tableHTML += '</tbody></table>';
+      }
+      const content = `
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-icon" style="background:var(--primary-light);color:var(--primary);"><i class="fas fa-box"></i></div><div><div class="stat-value">${asgs.length}</div><div class="stat-label">Đang mượn</div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Tài sản đang mượn</h3><button class="btn btn-primary" onclick="App.Requests.showEmpCreate()"><i class="fas fa-plus"></i> Tạo yêu cầu mới</button></div>
+          ${tableHTML}
+        </div>
+      `;
+      Router.renderPage('Dashboard Cá nhân', `Xin chào, ${State.currentUser.name||State.currentUser.userId}`, content);
+    }
+  };
+
+  /* ===== INIT ===== */
+  function init() {
+    State.init();
+    Router.register('dashboard', () => Dashboard.showAdmin());
+    Router.register('categories', () => Categories.list());
+    Router.register('employees', () => Employees.list());
+    Router.register('assets', () => Assets.list());
+    Router.register('assign', () => Assignments.showAssign());
+    Router.register('requests', () => Requests.showAdminMgmt(State.filters['reqTab']||'pending'));
+    Router.register('revoke', () => Revoke.showOptions());
+    Router.register('history', () => HistoryPage.show());
+    Router.register('teams', () => Teams.list());
+    Router.register('emp-dashboard', () => Dashboard.showEmp());
+    Router.register('emp-requests', () => Requests.showEmpList());
+    Router.register('emp-history', () => { State.filters['histEmp'] = State.currentUser.userId; HistoryPage.show(); });
+    Router.init();
+  }
+
+  return {
+    State, UI, Auth, Router,
+    Categories, Employees, Assets, Assignments, Requests,
+    Revoke, HistoryPage, Teams, Dashboard,
+    init
+  };
+})();
+
+// Bootstrap
+document.addEventListener('DOMContentLoaded', () => App.init());
+</script>
+</body>
+</html>

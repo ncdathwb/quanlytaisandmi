@@ -1,0 +1,18 @@
+{
+  "functions": {
+    "api/*.js": {
+      "maxDuration": 10
+    }
+  },
+  "rewrites": [
+    { "source": "/api/categories", "destination": "/api/categories" },
+    { "source": "/api/employees", "destination": "/api/employees" },
+    { "source": "/api/assets", "destination": "/api/assets" },
+    { "source": "/api/assignments", "destination": "/api/assignments" },
+    { "source": "/api/requests", "destination": "/api/requests" },
+    { "source": "/api/history", "destination": "/api/history" },
+    { "source": "/api/teams", "destination": "/api/teams" },
+    { "source": "/api/auth", "destination": "/api/auth" },
+    { "source": "/api/telegram-webhook", "destination": "/api/telegram-webhook" }
+  ]
+}
