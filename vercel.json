@@ -13,6 +13,7 @@
     { "source": "/api/history", "destination": "/api/history" },
     { "source": "/api/teams", "destination": "/api/teams" },
     { "source": "/api/auth", "destination": "/api/auth" },
-    { "source": "/api/telegram-webhook", "destination": "/api/telegram-webhook" }
+    { "source": "/api/telegram-webhook", "destination": "/api/telegram-webhook" },
+    { "source": "/api/ping", "destination": "/api/ping" }
   ]
 }

@@ -1,14 +1,26 @@
-const { getList, ok, bad, handleCors, parseBody } = require('./_lib');
-
 const ADMIN_CODE = '1395';
 const ADMIN_PASS = '18062025';
 
-module.exports = async function handler(req) {
-  const cors = await handleCors(req);
-  if (cors) return cors;
-  if (req.method !== 'POST') return new Response(JSON.stringify({ error: 'POST only' }), { status: 405 });
+function corsHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type'
+  };
+}
 
-  const body = await parseBody(req);
+function ok(data) { return new Response(JSON.stringify(data), { status: 200, headers: corsHeaders() }); }
+function bad(msg) { return new Response(JSON.stringify({ error: msg }), { status: 400, headers: corsHeaders() }); }
+
+module.exports = async function handler(req) {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: corsHeaders() });
+  }
+  if (req.method !== 'POST') return new Response(JSON.stringify({ error: 'POST only' }), { status: 405, headers: corsHeaders() });
+
+  let body;
+  try { body = await req.json(); } catch(e) { body = {}; }
   const { role, userId, password } = body;
 
   if (role === 'admin') {
@@ -19,6 +31,8 @@ module.exports = async function handler(req) {
   }
 
   if (role === 'employee') {
+    // Lazy-load _lib only when needed for employee login
+    const { getList } = require('./_lib');
     if (!/^\d{4}$/.test(userId)) return bad('Mã nhân viên phải là 4 chữ số');
     const emps = await getList('employees');
     const emp = emps.find(e => e.id === userId);
