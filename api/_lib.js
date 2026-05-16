@@ -1,4 +1,34 @@
-const { kv } = require('@vercel/kv');
+// Resolve Redis REST URL & token from any env var naming convention
+const REDIS_URL = process.env.UPSTASH_REDIS_REST_URL
+  || process.env.STORAGE_UPSTASH_REDIS_REST_URL
+  || process.env.KV_REST_API_URL
+  || process.env.KV_URL
+  || '';
+const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN
+  || process.env.STORAGE_UPSTASH_REDIS_REST_TOKEN
+  || process.env.KV_REST_API_TOKEN
+  || '';
+
+async function redisGet(key) {
+  const res = await fetch(`${REDIS_URL}/get/${encodeURIComponent(key)}`, {
+    headers: { Authorization: `Bearer ${REDIS_TOKEN}` }
+  });
+  if (!res.ok) throw new Error(`Redis GET failed: ${res.status}`);
+  const data = await res.json();
+  return data.result;
+}
+
+async function redisSet(key, value) {
+  const res = await fetch(`${REDIS_URL}/set/${encodeURIComponent(key)}`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${REDIS_TOKEN}`,
+      'Content-Type': 'text/plain'
+    },
+    body: String(value)
+  });
+  if (!res.ok) throw new Error(`Redis SET failed: ${res.status}`);
+}
 
 const KEYS = {
   categories: 'categories',
@@ -13,16 +43,13 @@ const KEYS = {
 const DEFAULT_TEAMS = ['York','Kiri','Creek','Como','Bud','BO','Scope'];
 
 async function getList(key) {
-  const raw = await kv.get(key);
+  const raw = await redisGet('qlts:' + key);
   if (!raw) return [];
-  if (typeof raw === 'string') {
-    try { return JSON.parse(raw); } catch(e) { return []; }
-  }
-  return raw;
+  try { return JSON.parse(raw); } catch(e) { return []; }
 }
 
 async function setList(key, data) {
-  await kv.set(key, JSON.stringify(data));
+  await redisSet('qlts:' + key, JSON.stringify(data));
 }
 
 function paginate(arr, page, limit) {

@@ -1,14 +1,12 @@
 {
   "name": "qlts-dmi",
   "version": "2.0.0",
-  "description": "Quản Lý Tài Sản DMI - Vercel KV + Telegram Bot",
+  "description": "Quản Lý Tài Sản DMI - Vercel + Upstash Redis + Telegram Bot",
   "scripts": {
     "dev": "vercel dev",
     "deploy": "vercel --prod"
   },
-  "dependencies": {
-    "@vercel/kv": "^1.0.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "vercel": "^34.0.0"
   }
