@@ -1,4 +1,8 @@
-const { kv } = require('@vercel/kv');
+const { Redis } = require('@upstash/redis');
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL || process.env.KV_URL,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN,
+});
 
 const KEYS = {
   categories: 'categories',
@@ -13,7 +17,7 @@ const KEYS = {
 const DEFAULT_TEAMS = ['York','Kiri','Creek','Como','Bud','BO','Scope'];
 
 async function getList(key) {
-  const raw = await kv.get(key);
+  const raw = await redis.get(key);
   if (!raw) return [];
   if (typeof raw === 'string') {
     try { return JSON.parse(raw); } catch(e) { return []; }
@@ -22,7 +26,7 @@ async function getList(key) {
 }
 
 async function setList(key, data) {
-  await kv.set(key, JSON.stringify(data));
+  await redis.set(key, JSON.stringify(data));
 }
 
 function paginate(arr, page, limit) {
